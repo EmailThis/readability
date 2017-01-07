@@ -35,7 +35,7 @@ defmodule Readability do
   alias Readability.Helper
 
   @default_options [retry_length: 250,
-                    min_text_length: 25,
+                    min_text_length: 125,
                     remove_unlikely_candidates: true,
                     weight_classes: true,
                     clean_conditionally: true,
@@ -48,10 +48,10 @@ defmodule Readability do
                     page_url: nil
                    ]
 
-  @regexes [unlikely_candidate: ~r/hidden|^hid$| hid$| hid |^hid |banner|combx|comment|community|disqus|extra|foot|header|hidden|lightbox|modal|menu|meta|nav|remark|rss|shoutbox|sidebar|sidebar-item|aside|sponsor|ad-break|agegate|pagination|pager|popup|ad-wrapper|advertisement|social|popup|yom-remote|share|social|mailmunch|relatedposts/i,
+  @regexes [unlikely_candidate: ~r/hidden|^hid$| hid$| hid |^hid |banner|combx|comment|community|disqus|extra|foot|header|hidden|lightbox|modal|menu|meta|nav|remark|rss|shoutbox|sidebar|sidebar-item|aside|sponsor|ad-break|agegate|pagination|pager|popup|ad-wrapper|advertisement|social|popup|yom-remote|share|social|mailmunch|relatedposts|sharedaddy/i,
             ok_maybe_its_a_candidate: ~r/and|article|body|column|main|shadow/i,
-            positive: ~r/article|body|content|entry|hentry|main|page|pagination|post|text|blog|story/i,
-            negative: ~r/hidden|^hid|combx|comment|com-|contact|foot|footer|footnote|link|masthead|media|meta|outbrain|promo|related|scroll|shoutbox|sidebar|sponsor|shopping|tags|tool|utility|widget/i,
+            positive: ~r/article|body|content|entry|hentry|main|page|pagination|post|text|blog|story|article/i,
+            negative: ~r/hidden|^hid|combx|comment|com-|contact|foot|footer|footnote|link|masthead|media|meta|outbrain|promo|related|scroll|shoutbox|sidebar|sponsor|shopping|tags|tool|utility|widget|modal/i,
             div_to_p_elements: ~r/<(a|blockquote|dl|div|img|ol|p|pre|table|ul)/i,
             replace_brs: ~r/(<br[^>]*>[ \n\r\t]*){2,}/i,
             replace_fonts: ~r/<(\/?)font[^>]*>/i,
