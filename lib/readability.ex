@@ -48,7 +48,7 @@ defmodule Readability do
                     page_url: nil
                    ]
 
-  @regexes [unlikely_candidate: ~r/hidden|^hid$| hid$| hid |^hid |banner|combx|comment|community|disqus|extra|foot|header|hidden|lightbox|modal|menu|meta|nav|remark|rss|shoutbox|sidebar|sidebar-item|aside|sponsor|ad-break|agegate|pagination|pager|popup|ad-wrapper|advertisement|social|popup|yom-remote|share|social|mailmunch|relatedposts|sharedaddy/i,
+  @regexes [unlikely_candidate: ~r/hidden|^hid$| hid$| hid |^hid |banner|combx|comment|community|disqus|extra|foot|header|hidden|lightbox|modal|menu|meta|nav|remark|rss|shoutbox|sidebar|sidebar-item|aside|sponsor|ad-break|agegate|pagination|pager|popup|ad-wrapper|advertisement|social|popup|yom-remote|share|social|mailmunch|relatedposts|sharedaddy|sumome-share/i,
             ok_maybe_its_a_candidate: ~r/and|article|body|column|main|shadow/i,
             positive: ~r/article|body|content|entry|hentry|main|page|pagination|post|text|blog|story|article/i,
             negative: ~r/hidden|^hid|combx|comment|com-|contact|foot|footer|footnote|link|masthead|media|meta|outbrain|promo|related|scroll|shoutbox|sidebar|sponsor|shopping|tags|tool|utility|widget|modal/i,

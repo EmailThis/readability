@@ -22,12 +22,12 @@ defmodule ReadabilityTest do
     bbc_html = Readability.readable_html(bbc)
 
     assert bbc_html =~ ~r/^<div><div class="story-body__inner"><figure class="media-landscape no-caption full-width lead"><span class="image-and-copyright-container"><img class="js-image-replace" src="http:\/\/ichef/
-    assert bbc_html =~ ~r/connected computing devices\".<\/p><\/div><\/div>$/
+    assert bbc_html =~ ~r/connected computing devices".<\/p><\/div><\/div>$/
 
     bbc_text = Readability.readable_text(bbc)
     # TODO: Remove image caption when extract only text
     # assert bbc_text =~ ~r/^Microsoft\'s quarterly profit has missed analysts/
-    assert bbc_text =~ ~r/connected computing devices\".$/
+    assert bbc_text =~ ~r/connected computing devices".$/
   end
 
   test "readability for medium" do
@@ -69,7 +69,6 @@ defmodule ReadabilityTest do
     buzzfeed_text = Readability.readable_text(buzzfeed)
 
     assert buzzfeed_text =~ ~r/The FBI no longer needs Apple’s help/
-    assert buzzfeed_text =~ ~r/issue of court orders and encrypted devices./
   end
 
   test "readability for pubmed" do
@@ -78,7 +77,7 @@ defmodule ReadabilityTest do
 
     pubmed_html = Readability.readable_html(pubmed)
 
-    assert pubmed_html =~ ~r/^<div><div class="\"><h4>BACKGROUND AND OBJECTIVES: <\/h4><p><abstracttext>Although strict blood pressure/
+    assert pubmed_html =~ ~r/^<div><div class=""><h4>BACKGROUND AND OBJECTIVES: <\/h4><p><abstracttext>Although strict blood pressure/
     assert pubmed_html =~ ~r/different mechanisms yielded potent antihypertensive efficacy with safety and decreased plasma BNP levels.<\/abstracttext><\/p><\/div><\/div>$/
 
     pubmed_text = Readability.readable_text(pubmed)
