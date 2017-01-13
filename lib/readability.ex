@@ -109,7 +109,8 @@ defmodule Readability do
 
     html_tree = case url do
       nil -> html_tree
-      _ -> html_tree |> Helper.to_absolute(url)
+      _ -> 
+        html_tree |> Helper.to_absolute(url)
     end
 
     article_tree = html_tree |> ArticleBuilder.build(opts)
@@ -119,6 +120,7 @@ defmodule Readability do
       article_html: readable_html(article_tree),
       article_text: readable_text(article_tree)
     }
+
   end
 
   @doc """

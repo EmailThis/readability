@@ -3,8 +3,7 @@ defmodule ReadabilityTest do
 
   test "readability for NY Times" do
     html = TestHelper.read_fixture("nytimes.html")
-    opts = [clean_conditionally: false]
-    nytimes = Readability.article(html, opts)
+    nytimes = Readability.article(html)
 
     nytimes_html = Readability.readable_html(nytimes)
     assert nytimes_html =~ ~r/^<div><div class="story-body"><figure id="media-100000004245260" class="media photo lede layout-large-horizontal"><div class="image"><img src="https:\/\/static01.nyt/
@@ -32,8 +31,7 @@ defmodule ReadabilityTest do
 
   test "readability for medium" do
     html = TestHelper.read_fixture("medium.html")
-    opts = [clean_conditionally: false]
-    medium = Readability.article(html, opts)
+    medium = Readability.article(html)
 
     medium_html = Readability.readable_html(medium)
 
@@ -48,8 +46,7 @@ defmodule ReadabilityTest do
 
   test "readability for medium 2" do
     html = TestHelper.read_fixture("medium2.html")
-    opts = [clean_conditionally: false]
-    medium = Readability.article(html, opts)
+    medium = Readability.article(html)
 
     medium_html = Readability.readable_html(medium)
 
@@ -86,6 +83,28 @@ defmodule ReadabilityTest do
     assert pubmed_text =~ ~r/with different mechanisms yielded potent antihypertensive efficacy with safety and decreased plasma BNP levels.$/
   end
 
+  test "summarize_existing for pubmed" do
+    html = TestHelper.read_fixture("pubmed.html")
+    summary = Readability.summarize_existing(html)
+
+    assert summary.article_html =~ ~r/^<div><div class=""><h4>BACKGROUND AND OBJECTIVES: <\/h4><p><abstracttext>Although strict blood pressure/
+    assert summary.article_html =~ ~r/different mechanisms yielded potent antihypertensive efficacy with safety and decreased plasma BNP levels.<\/abstracttext><\/p><\/div><\/div>$/
+
+    assert summary.article_text =~ ~r/^BACKGROUND AND OBJECTIVES: \nAlthough strict blood pressure/
+    assert summary.article_text =~ ~r/with different mechanisms yielded potent antihypertensive efficacy with safety and decreased plasma BNP levels.$/
+  end
+
+  test "summarize_existing with url" do
+    html = TestHelper.read_fixture("pubmed.html")
+    summary = Readability.summarize_existing(html, [url: "http://test.com"])
+
+    assert summary.article_html =~ ~r/^<div><div class=""><h4>BACKGROUND AND OBJECTIVES: <\/h4><p><abstracttext>Although strict blood pressure/
+    assert summary.article_html =~ ~r/different mechanisms yielded potent antihypertensive efficacy with safety and decreased plasma BNP levels.<\/abstracttext><\/p><\/div><\/div>$/
+
+    assert summary.article_text =~ ~r/^BACKGROUND AND OBJECTIVES: \nAlthough strict blood pressure/
+    assert summary.article_text =~ ~r/with different mechanisms yielded potent antihypertensive efficacy with safety and decreased plasma BNP levels.$/
+  end
+
   test "readability for tomaz" do
     html = TestHelper.read_fixture("tomaz.html")
     tomaz = Readability.article(html)
@@ -119,11 +138,11 @@ defmodule ReadabilityTest do
     assert html =~ "So I’m not a big fan out too much automation when it comes to social media, but there are times when it can be useful and save you a lot of time"
   end
 
+
   # test "readability for buzzfeed (url)" do
   #   html = Readability.summarize("https://www.buzzfeed.com/salvadorhernandez/fbi-obtains-passcode-to-iphone-in-new-york-drops-case-agains").article_html
   #   assert html =~ "In New York, as in San Bernardino, an imminent courtroom battle was averted"
   # end
-
 
   # test "readability for newyorker url" do
   #   html = Readability.summarize("http://www.newyorker.com/magazine/2017/01/09/the-vertical-farm").article_html
@@ -148,5 +167,6 @@ defmodule ReadabilityTest do
   #   html = Readability.summarize("http://www.economist.com/blogs/erasmus/2017/02/jewish-revival-sicily").article_html
   #   assert html =~ "deportation and murder at the hands of the German Nazis from 1943. In the far south, a terminal,"
   # end
+
 
 end

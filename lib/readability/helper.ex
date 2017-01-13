@@ -140,7 +140,7 @@ defmodule Readability.Helper do
       {"img", attrs} ->
         attr_map = Enum.into(attrs, %{})
 
-        src = (Map.get(attr_map, "rel:bf_image_src") || Map.get(attr_map, "data-src") || Map.get(attr_map, "src"))
+        src = (Map.get(attr_map, "rel:bf_image_src") || Map.get(attr_map, "data-original") || Map.get(attr_map, "data-src") || Map.get(attr_map, "src"))
 
         if src do
           src = URI.merge(url, src) |> to_string
