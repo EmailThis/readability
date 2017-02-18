@@ -29,4 +29,4 @@ use Mix.Config
 #
 #     import_config "#{Mix.env}.exs"
 
-config :readability, httpoison_options: []
+config :readability, httpoison_options: [ follow_redirect: true, max_redirect: 20, ssl: [{:versions, [:'tlsv1.2']}] ]

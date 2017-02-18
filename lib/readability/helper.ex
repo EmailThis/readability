@@ -71,6 +71,7 @@ defmodule Readability.Helper do
   Count only text length
   """
   @spec text_length(html_tree) :: number
+  def text_length(nil), do: 0
   def text_length(html_tree) do
     html_tree |> Floki.text |> String.strip |> String.length
   end
@@ -87,6 +88,30 @@ defmodule Readability.Helper do
   end
 
   @doc """
+  Convert relative links to absolute links
+  """
+  def to_absolute(html, nil), do: html 
+  def to_absolute(html, url) do
+    html = html |> a_to_absolute(url)
+    html |> img_to_absolute(url)
+  end
+
+  def ungzip(raw_html, headers) do
+    gzipped = Enum.any?(headers, fn (kv) ->
+      case kv do
+        {"Content-Encoding", "gzip"} -> true
+        _ -> false
+      end
+    end)
+
+    if gzipped do
+      :zlib.gunzip(raw_html)
+    else
+      raw_html
+    end
+  end
+
+  @doc """
   Normalize and Parse to html tree(tuple or list)) from binary html
   """
   @spec normalize(binary) :: html_tree
@@ -94,7 +119,7 @@ defmodule Readability.Helper do
     raw_html
     |> String.replace(Readability.regexes(:replace_xml_version), "")
     |> String.replace(Readability.regexes(:replace_brs), "</p><p>")
-    |> String.replace(Readability.regexes(:replace_fonts), "<\1span>")
+    |> String.replace(Readability.regexes(:replace_fonts), " ")
     |> String.replace(Readability.regexes(:normalize), " ")
     |> Floki.parse
     |> Floki.filter_out(:comment)
@@ -106,5 +131,36 @@ defmodule Readability.Helper do
          tokens = Floki.SelectorTokenizer.tokenize(s)
          Floki.SelectorParser.parse(tokens)
        end)
+  end
+
+  defp img_to_absolute(html, url) do
+    elements = Floki.find(html, "img")
+
+    transformation = fn
+      {"img", attrs} ->
+        attr_map = Enum.into(attrs, %{})
+
+        src = (Map.get(attr_map, "rel:bf_image_src") || Map.get(attr_map, "data-src") || Map.get(attr_map, "src"))
+
+        if src do
+          src = URI.merge(url, src) |> to_string
+          {"img", Map.put(attr_map, "src", src) |> Enum.into([])}
+        else
+          {"img", attrs}
+        end
+      x -> x
+    end
+
+    Floki.transform(html, transformation)
+  end
+
+  defp a_to_absolute(html, url) do
+    elements = Floki.find(html, "a")
+    transformation = fn
+      {"a", [{"href", x} | xs]} ->
+        {"a", [{"href", URI.merge(url, x) |> to_string } | xs]}
+      x -> x
+    end
+    Floki.transform(html, transformation)
   end
 end

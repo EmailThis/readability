@@ -1,0 +1,452 @@
+
+<!DOCTYPE html>
+<html lang="en-us">
+
+  <head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>
+    
+      Evaluating Text Extraction Algorithms &middot; My Tech Blog.
+    
+  </title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/public/css/poole.css">
+  <link rel="stylesheet" href="/public/css/syntax.css">
+  <link rel="stylesheet" href="/public/css/lanyon.css">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,300italic,400italic,700,700italic|Open+Sans+Condensed:300,300italic,700' rel='stylesheet' type='text/css'>
+
+  <!-- Icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/public/apple-touch-icon-precomposed.png">
+  <link rel="shortcut icon" href="/public/favicon.ico">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+
+  <script type="text/javascript" async src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+</head>
+
+
+  <body>
+
+    <!-- Target for toggling the sidebar `.sidebar-checkbox` is for regular
+     styles, `#sidebar-checkbox` for behavior. -->
+<input type="checkbox" class="sidebar-checkbox" id="sidebar-checkbox">
+
+<!-- Toggleable sidebar -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-item">
+    <p>Tomaž Kovačič about technology and engineering.</p>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a class="sidebar-nav-item" href="/">Home</a>
+
+    
+  </nav>
+
+  <div class="sidebar-item">
+    <p>
+      &copy; 2016. All rights reserved.
+    </p>
+  </div>
+</div>
+
+
+    <!-- Wrap is the content to shift when toggling the sidebar. We wrap the
+         content to avoid any CSS collisions with our real content. -->
+    <div class="wrap">
+      <div class="masthead">
+        <div class="container">
+          <h3 class="masthead-title">
+            <a href="/" title="Home">My Tech Blog.</a>
+            <small></small>
+          </h3>
+        </div>
+      </div>
+
+      <div class="spacer spacer-height">
+
+      </div>
+
+      <div class="container content">
+        <div class="post">
+  <h1 class="post-title" id="post-id-122">Evaluating Text Extraction Algorithms</h1>
+  <span class="post-date">09 Jun 2011</span>
+  <p><em><strong>UPDATE 11/6/2011:</strong> Added the summary and the results table</em></p>
+<p>Lately I've been working on evaluating and comparing algorithms, capable of extractinguseful content from arbitrary html documents. Before continuing I encourage you to pass trough some of my previous posts, just to get a better feel of what we're dealing with; I've written a <a href="http://tomazkovacic.com/blog/14/extracting-article-text-from-html-documents/">short overview</a>, compiled a <a href="http://tomazkovacic.com/blog/56/list-of-resources-article-text-extraction-from-html-documents/">list of resources</a> if you want to dig deeper and made a <a href="http://tomazkovacic.com/blog/98/feature-wise-comparison-of-html-article-text-extractors/">feature wise comparison</a> of related software and APIs.</p>
+<h2>Summary</h2>
+<ul>
+<li>The evaluation environment presented in this post consists of 2 datasets with approximately 650 html documents.</li>
+<li>The gold standard of both datasets was produced by human annotators.</li>
+<li>14 different algorithms were evaluated in terms of precision, recall and F1 score.</li>
+<li>The results have show that the best opensource solution is the boilerpipe library.</li>
+<li>Commercial APIs included in the evaluation environment produced consistent results on both datasets. Diffbot and Repustate API performed best, while others follow very closely.</li>
+<li>Readability's performance is surprisingly poor and lacking consistency between both ports that were put to use in the evaluation setup.</li>
+<li>Further work will include: adding more APIs and libraries to the setup, working on a new extraction technique and assembling a new dataset.</li>
+</ul>
+<h2>Evaluation Data</h2>
+<p>My evaluation setup consists of 2 fairly well known datasets:</p>
+<ul>
+<li>The final <strong>cleaneval</strong> evaluation dataset, with 681 documents (created by the ACL web-as-corpus community).</li>
+<li><strong>Google news</strong> dataset, with 621 documents.  (harvested by the authors of the boilerpipe library)</li>
+</ul>
+<p>The former was harvested from all sorts of web pages, including: articles, blog posts, mailing list archives, forum conversations, dedicated form submission pages etc. The latter was gathered by scraping the google news stream for a longer period of time (cca 6 months). The random sample that became the final dataset of 621 documents from 408 different news type web sites, came from a larger set of 250k documents assembled during the scrapping process.</p>
+<p>From their description and related documentation we can conclude that they represent 2 slightly distinctive domains: the google news dataset represents a specific domain of news articles and the cleaneval dataset represents a cross domain collection of documents.</p>
+<p>The gold standard counterpart of both datasets was created by human annotators who assessed each document individually. Annotators who assembled the cleaneval gold standard, first used <a href="http://en.wikipedia.org/wiki/Lynx_(web_browser)">lynx</a> text based browser to filter out all the non-text building blocks. Each annotator than cleaned out the redundant non-content text using his own visual interpretation of the website. On the other hand, annotators of the google news dataset inserted additional span tags (using class names as labels) into the original html document. The class names of span tags indicate the following content labels: headline, main text, supplemental text, user comments, related content. In my experimental setup I use only the content labeled under <em>headline</em> and <em>main text</em> as the gold standard.</p>
+<p>As you might have noticed, these datasets are not as large as we would like them to be and there is a fairly good reason behind that: assessing and labeling html documents for content is a tedious task.  So was the preprocessing of the cleaneval dataset on my part. The methodology of storing raw html documents for the cleaneval shared task included inserting a special &lt;text&gt; tag around the whole html markup to hold some meta data about the document itself. I had to remove these tags from all documents and insert the basic &lt;html&gt; and &lt;body&gt; tags to those who were obviously stripped of some starting and trailing boilerplate html markup. The reasoning of inserting such tags back into the raw html document is based on the nature of particular extraction software implementations which assume the existence of such tags.</p>
+<h2>Metrics</h2>
+<p>I'm using <em>precision</em>, <em>recall</em> and <em>f1 score </em>to evaluate the performance.  I covered these in one of my <a href="http://tomazkovacic.com/blog/74/evaluation-metrics-for-text-extraction-algorithms/">previous posts</a>, but here is a short recap:</p>
+<p>Definitions:</p>
+<p><a href="/public/uploads/03/precision.gif"><img class="alignnone size-full wp-image-75" title="precision" src="/public/uploads/03/precision.gif" alt="" width="189" height="44" /></a> <a href="/public/uploads/03/recall.gif"><img class="alignnone size-full wp-image-76" title="recall" src="/public/uploads/03/recall.gif" alt="" width="160" height="44" /></a> <a href="/public/uploads/03/f1-score.gif"><img class="alignnone size-full wp-image-83" title="f1-score" src="/public/uploads/03/f1-score.gif" alt="" width="250" height="42" /></a></p>
+<p>Given an HTML document we predict/extract/<strong>retrieve</strong> a sequence of words and denote them as <em>S<sub><strong>ret</strong></sub></em>. Consequentially the sequence of words representing <strong>relevant</strong> text is denoted as <em>S</em><em><sub><strong>rel</strong> </sub></em>.</p>
+<p>Both sequences are constructed by the following procedure:</p>
+<ol>
+<li>Remove any sort of remaining inline html tags</li>
+<li>Remove all punctuation characters</li>
+<li>Remove all control characters</li>
+<li>Remove all non ascii characters (due to unreliable information of the document encoding)</li>
+<li>Normalize to lowercase</li>
+<li>Split on whitespace</li>
+</ol>
+<p>The intersection of retrieved and the relevant sequence of words is calculated using the Ratcliff-Obershelff algorithm (python <a href="http://docs.python.org/library/difflib.html">difflib</a>).</p>
+<p>As we're dealing with raw data, we have to account for 4 special cases of these metrics:</p>
+<table style="font-size: 70%;">
+<tbody>
+<tr>
+<td><strong>Precision</strong></td>
+<td><strong>Recall</strong></td>
+<td><strong>F1-score</strong></td>
+<td><strong>Case</strong></td>
+</tr>
+<tr>
+<td>0</td>
+<td>0</td>
+<td>inf</td>
+<td>Missmatch - both retrieved and relevant sequences are <strong>not</strong> empty, but they don't intersect.</td>
+</tr>
+<tr>
+<td>inf</td>
+<td>0</td>
+<td>nan</td>
+<td>Set of retrieved words is empty - the extractor predicts that the observed document does not contain any content.</td>
+</tr>
+<tr>
+<td>0</td>
+<td>inf</td>
+<td>nan</td>
+<td>Set of relevant words is empty - the document itself does not contain anything useful.</td>
+</tr>
+<tr>
+<td>inf</td>
+<td>inf</td>
+<td>nan</td>
+<td>Both retrieved and relevant set is empty - the document does not contain nothing useful and the extractor comes back empty handed.</td>
+</tr>
+</tbody>
+</table>
+<h2>Results</h2>
+<p>Currently my evaluation setup includes the following content extractors that were either already reviewed or mentioned in my preceding blog posts, so I won't get into the details of every single one in the context of this writeup:</p>
+<ul>
+<li><a href="http://code.google.com/p/boilerpipe/">Boilerpipe</a> - using two similar variants; the <strong>default</strong> extractor and the one especially tuned for <strong>article</strong> type of content.</li>
+<li><a href="http://webascorpus.sourceforge.net/PHITE.php?sitesig=FILES&amp;page=FILES_10_Software">NCleaner</a> - again using two of its variants; the <strong>non lexical</strong> n-gram character language independat model and the model trained on <strong>english</strong> corpora.</li>
+<li><a href="http://code.google.com/p/arc90labs-readability/source/browse/trunk/js/readability.js">Readability</a> - using its python port and readability ported to node.js on top of jsdom.</li>
+<li>Pasternack &amp; Roth algorithm (MSS) - authors provided me with access to the implementation presented in the www2009 <a href="http://www.www2009.org/proceedings/pdf/p971.pdf">paper</a>.</li>
+<li><a href="https://github.com/jiminoc/goose/wiki">Goose</a> - using my fork to expose the core content extraction functionality.</li>
+<li>Zextractor - internally used service developed by my friends/mentors at <a href="http://www.zemanta.com/">Zemanta</a>.</li>
+<li><a href="http://www.alchemyapi.com/api/text/">Alchemy API</a> - using their<em> text extraction API</em>.</li>
+<li><a href="http://extractiv.com/demo.html">Extractiv</a> - using their semantic <em>on demand RESTul API.</em></li>
+<li><a href="http://www.repustate.com/docs/#clean">Repustate API</a> - using the <em>clean html API call</em>.</li>
+<li><a href="http://www.diffbot.com/docs/api/article">Diffbot</a> - using the <em>article API</em>.</li>
+</ul>
+<p>Admittedly they are not all specialized for solving problems in a specific domain, say news article content extraction, but they all share one common property: they're capable of distinguishing<em> </em>useful textual content apart from boilerplate and useless content when observing an arbitrary html document.</p>
+<p>Results were obtained by calculating precision and recall for each document in the dataset for every content extractor. Then we calculate the arithmetic mean of all three metrics for every extractor. Bar charts are employed to visualize the results.</p>
+<table style="border: none; font-size: 70%;">
+<tbody>
+<tr style="border: none;">
+<td style="border: none;">
+<p>Precision, recall &amp; F1 score mean - Google news dataset<a href="/public/uploads/06/google-news-dataset_stat.png"><img class="size-medium wp-image-154" title="google-news-dataset_stat" src="/public/uploads/06/google-news-dataset_stat-250x300.png" alt="" width="250" height="300" /></a></td>
+<td style="border: none;">
+<p>Precision, recall &amp; F1 score mean - Cleaneval dataset<a href="/public/uploads/06/cleaneval-final-dataset_stat.png"><img class="size-medium wp-image-156" title="cleaneval-final-dataset_stat" src="/public/uploads/06/cleaneval-final-dataset_stat-250x300.png" alt="" width="250" height="300" /></a></td>
+</tr>
+</tbody>
+</table>
+<table style="font-size: 70%;">
+<tbody>
+<tr>
+<td><em><strong>Cleaneval→</strong></em></td>
+<td><em>precision</em></td>
+<td><em>recall</em></td>
+<td><em>f1 score</em></td>
+</tr>
+<tr>
+<td><strong>Boilerpipe DEF</strong></td>
+<td>0.931</td>
+<td>0.856</td>
+<td>0.872</td>
+</tr>
+<tr>
+<td><strong>Boilerpipe ART</strong></td>
+<td>0.949</td>
+<td>0.764</td>
+<td>0.804</td>
+</tr>
+<tr>
+<td><strong>Goose</strong></td>
+<td>0.934</td>
+<td>0.719</td>
+<td>0.770</td>
+</tr>
+<tr>
+<td><strong>MSS</strong></td>
+<td>0.911</td>
+<td>0.699</td>
+<td>0.718</td>
+</tr>
+<tr>
+<td><strong>Python Readability</strong></td>
+<td>0.841</td>
+<td>0.833</td>
+<td>0.803</td>
+</tr>
+<tr>
+<td><strong>Node Readability</strong></td>
+<td>0.704</td>
+<td>0.878</td>
+<td>0.753</td>
+</tr>
+<tr>
+<td><strong>Alchemy API</strong></td>
+<td>0.950</td>
+<td>0.828</td>
+<td>0.854</td>
+</tr>
+<tr>
+<td><strong>Diffbot</strong></td>
+<td>0.932</td>
+<td>0.890</td>
+<td>0.891</td>
+</tr>
+<tr>
+<td><strong>Extractiv</strong></td>
+<td>0.935</td>
+<td>0.871</td>
+<td>0.887</td>
+</tr>
+<tr>
+<td><strong>Repustate</strong></td>
+<td>0.940</td>
+<td>0.889</td>
+<td>0.896</td>
+</tr>
+<tr>
+<td><strong>Zextractor</strong></td>
+<td>0.916</td>
+<td>0.763</td>
+<td>0.800</td>
+</tr>
+<tr>
+<td><strong>NCleaner En</strong></td>
+<td>0.923</td>
+<td>0.895</td>
+<td>0.897</td>
+</tr>
+<tr>
+<td><strong>NCleaner NonLex</strong></td>
+<td>0.882</td>
+<td>0.927</td>
+<td>0.892</td>
+</tr>
+</tbody>
+</table>
+<table style="font-size: 70%;">
+<tbody>
+<tr>
+<td><strong><em>Google news→</em></strong></td>
+<td><em>precision</em></td>
+<td><em>recall</em></td>
+<td><em>f1 score</em></td>
+</tr>
+<tr>
+<td><strong>Boilerpipe DEF</strong></td>
+<td>0.863</td>
+<td>0.938</td>
+<td>0.887</td>
+</tr>
+<tr>
+<td><strong>Boilerpipe ART</strong></td>
+<td>0.931</td>
+<td>0.955</td>
+<td>0.939</td>
+</tr>
+<tr>
+<td><strong>Goose</strong></td>
+<td>0.934</td>
+<td>0.887</td>
+<td>0.901</td>
+</tr>
+<tr>
+<td><strong>MSS</strong></td>
+<td>0.907</td>
+<td>0.882</td>
+<td>0.875</td>
+</tr>
+<tr>
+<td><strong>Python Readability</strong></td>
+<td>0.638</td>
+<td>0.825</td>
+<td>0.681</td>
+</tr>
+<tr>
+<td><strong>Node Readability</strong></td>
+<td>0.688</td>
+<td>0.968</td>
+<td>0.789</td>
+</tr>
+<tr>
+<td><strong>Alchemy API</strong></td>
+<td>0.936</td>
+<td>0.876</td>
+<td>0.888</td>
+</tr>
+<tr>
+<td><strong>Diffbot</strong></td>
+<td>0.924</td>
+<td>0.968</td>
+<td>0.935</td>
+</tr>
+<tr>
+<td><strong>Extractiv</strong></td>
+<td>0.824</td>
+<td>0.956</td>
+<td>0.870</td>
+</tr>
+<tr>
+<td><strong>Repustate</strong></td>
+<td>0.917</td>
+<td>0.907</td>
+<td>0.898</td>
+</tr>
+<tr>
+<td><strong>Zextractor</strong></td>
+<td>0.850</td>
+<td>0.806</td>
+<td>0.803</td>
+</tr>
+<tr>
+<td><strong>NCleaner En</strong></td>
+<td>0.742</td>
+<td>0.947</td>
+<td>0.812</td>
+</tr>
+<tr>
+<td><strong>NCleaner NonLex</strong></td>
+<td>0.613</td>
+<td>0.959</td>
+<td>0.723</td>
+</tr>
+</tbody>
+</table>
+<p>Next we explore the distribution of per document measurements. Instead of just calculating the mean of precision, recall and F1 score we can explore the frequencies of per document measurements. In the following chart we visualize frequencies for each metric for all extractors. Notice that we're splitting the [0,1] interval of each metric into 20 bins with equidistant intervals.</p>
+<table style="border: none; font-size: 70%;">
+<tbody>
+<tr style="border: none;">
+<td style="border: none;">
+<p>Metric distributions - Google news dataset<a href="/public/uploads/06/google-news-extr_stat.png"><img class="size-medium wp-image-159" title="google-news-extr_stat" src="/public/uploads/06/google-news-extr_stat-240x300.png" alt="" width="240" height="300" /></a></td>
+<td style="border: none;">
+<p>Metric distributions - Cleaneval dataset<a href="/public/uploads/06/cleaneval-final-extr_stat.png"><img class="size-medium wp-image-157" title="cleaneval-final-extr_stat" src="/public/uploads/06/cleaneval-final-extr_stat-240x300.png" alt="" width="240" height="300" /></a></td>
+</tr>
+</tbody>
+</table>
+<p>To account for previously mentioned 4 special cases, we employ a stacked bar chart to inspect the margins of useful/successful per document measurements for every dataset.</p>
+<table style="border: none; font-size: 70%;">
+<tbody>
+<tr style="border: none;">
+<td style="border: none;">
+Special cases of per document measurements - Cleaneval dataset<a href="/public/uploads/06/cleaneval-final-contents.png"><img src="/public/uploads/06/cleaneval-final-contents-300x225.png" alt="" title="cleaneval-final-contents" width="300" height="225" class="size-medium wp-image-155" /></a></p>
+</td>
+<td style="border: none;">
+<p>Special cases of per document measurements - Google news dataset<a href="/public/uploads/06/google-news-contents.png"><img src="/public/uploads/06/google-news-contents-300x225.png" alt="" title="google-news-contents" width="300" height="225" class="size-medium wp-image-158" /></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Every per document measurement can fall into one of the "special cases" category, "successful" category, or an extra "failed" category. The latter stands for measurement instances that failed due to: parsing errors, implementation specific errors, unsupported language errors etc. The right hand side of both figures depicts the same categories without the "successful" part.</p>
+<p>This chart is important, because we only make use of measurements who fall under the "successful" category to obtain the distribution and mean for each metric, respectively.</p>
+<h2>Observations</h2>
+<p>The foremost observation is the varying performance of NCleaner outside the cleaneval domain, since both variants seem to perform poorly on the google news collection. The cause of such behavior might be the likelihood that NCleaner was trained on the cleaneval corpus.</p>
+<p>Readability's poor performance came as a surprise, moreover, its varying results between both ports. Relatively low precision and high recall indicate that readability tends to include large portions of useless text in its output. I'm not quite satisfied of how readability is represented in this experiment as I'm not making use of the original implementation. The node.js port seems not to differ from the original as much as the python port, but I still worry I'll have to use the original implementation on top of a headless webkit browser engine like <a href="http://www.phantomjs.org/">PhantomJS</a>, to get a better representation.</p>
+<p>Notice the consistent performance of commercial APIs (and zemanta's internal service), Alchemy API and Diffbot in particular. According to diffbot's co-founder Michael Tung, their article API is only a small portion of their technology stack. They're using common visual features of websites to train models in order to gain the understanding of various types of web pages (forum threads, photo galleries, contact info pages and about 50 other types).  The article API used in this setup is just an additionally exposed model, trained on visual features of article type pages. On the other hand, zextractor (zemanta's internal service) leverages on libsvm to classify atomic text blocks of the newly observed document.</p>
+<p>What I find especially interesting are the bimodal distributions of precision and/or recall for MSS and readability's python port. I suspect that they're failing to produce relevant content on really big documents or they're capable of extracting only a limited amount of content. It'll be interesting to explore this phenomena with some additional result visualizations.</p>
+<h2>Conclusion and Further Work</h2>
+<p>According to my evaluation setup and personal experience, the best open source solution currently available on the market is the boilerpipe library. If we treat precision with an equal amount of importance as recall (reflected in the F1 score) and take into account the performance consistency across both domains, then boilerpipe performs best. Performance aside, its codebase is seems to be quite stable and it works really fast.</p>
+<p>If you're looking for an API and go by the same criteria (equal importance of precision and recall, performance consistency across both domains), diffbot seems to perform best, although alchemy, repustate and extractiv are following closely. If speed plays a greater role in your decision making process; Alchemy API seems to be a fairly good choice, since its response time could be measured in tenths of  a second, while others rarely finish under a second .</p>
+<p>My further work will be wrapped around adding new software to my evaluation environment (I was recently introduced to <a href="http://code.google.com/p/justext/">justext</a> tool), compiling a new (larger) dataset and working on my own project, that'll hopefully yield some competative results.</p>
+<p>Stay tuned for I'll be releasing all the data and code used in this evaluation setup in the near future.</p>
+
+</div>
+
+<div class="related">
+  <h2>Related Posts</h2>
+  <ul class="related-posts">
+    
+      <li>
+        <h3>
+          <a href="/blog/2011/04/19/feature-wise-comparison-of-html-article-text-extractors/">
+            Feature-wise Comparison of HTML Article Text Extractors
+            <small>19 Apr 2011</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/blog/2011/03/30/evaluation-metrics-for-text-extraction-algorithms/">
+            Evaluation Metrics for Text Extraction Algorithms
+            <small>30 Mar 2011</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/blog/2011/03/11/list-of-resources-article-text-extraction-from-html-documents/">
+            List of resources: Article text extraction from HTML documents
+            <small>11 Mar 2011</small>
+          </a>
+        </h3>
+      </li>
+    
+  </ul>
+</div>
+
+      </div>
+    </div>
+
+    <label for="sidebar-checkbox" class="sidebar-toggle"></label>
+
+    <script>
+      (function(document) {
+        var toggle = document.querySelector('.sidebar-toggle');
+        var sidebar = document.querySelector('#sidebar');
+        var checkbox = document.querySelector('#sidebar-checkbox');
+
+        document.addEventListener('click', function(e) {
+          var target = e.target;
+
+          if(!checkbox.checked ||
+             sidebar.contains(target) ||
+             (target === checkbox || target === toggle)) return;
+
+          checkbox.checked = false;
+        }, false);
+      })(document);
+    </script>
+  </body>
+</html>

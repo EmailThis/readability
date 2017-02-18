@@ -29,7 +29,7 @@ defmodule Readability.Sanitizer do
 
   defp conditionally_cleaing_fn(candidates) do
     fn({tag, attrs, _} = tree) ->
-      if Enum.any?(["table", "ul", "div"], &(&1 == tag)) do
+      if Enum.any?(["table", "ul"], &(&1 == tag)) do
         weight = Scoring.class_weight(attrs)
         same_tree = candidates
                     |> Enum.find(%Candidate{}, &(&1.html_tree == tree))
@@ -75,10 +75,10 @@ defmodule Readability.Sanitizer do
 
   defp clean_unlikely_tag?({tag, attrs, _}) do
     attrs_str = attrs |> Enum.map(&(elem(&1, 1))) |> Enum.join("")
-    tag =~ ~r/form|object|iframe|embed/ && !(attrs_str =~ Readability.regexes(:video))
+    tag =~ ~r/form|object|iframe|embed|input|textarea|select|button/ && !(attrs_str =~ Readability.regexes(:video))
   end
 
   defp clean_empty_p?({tag, _, _} = html_tree) do
-    tag == "p" && Helper.text_length(html_tree) == 0
+    tag == "p" && Helper.text_length(html_tree) == 0 && (html_tree |> Floki.find("img") |> length  == 0)
   end
 end
