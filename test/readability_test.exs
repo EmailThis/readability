@@ -83,20 +83,10 @@ defmodule ReadabilityTest do
     assert pubmed_text =~ ~r/with different mechanisms yielded potent antihypertensive efficacy with safety and decreased plasma BNP levels.$/
   end
 
-  test "summarize_existing for pubmed" do
+
+  test "summarize_source with url" do
     html = TestHelper.read_fixture("pubmed.html")
-    summary = Readability.summarize_existing(html)
-
-    assert summary.article_html =~ ~r/^<div><div class=""><h4>BACKGROUND AND OBJECTIVES: <\/h4><p><abstracttext>Although strict blood pressure/
-    assert summary.article_html =~ ~r/different mechanisms yielded potent antihypertensive efficacy with safety and decreased plasma BNP levels.<\/abstracttext><\/p><\/div><\/div>$/
-
-    assert summary.article_text =~ ~r/^BACKGROUND AND OBJECTIVES: \nAlthough strict blood pressure/
-    assert summary.article_text =~ ~r/with different mechanisms yielded potent antihypertensive efficacy with safety and decreased plasma BNP levels.$/
-  end
-
-  test "summarize_existing with url" do
-    html = TestHelper.read_fixture("pubmed.html")
-    summary = Readability.summarize_existing(html, [url: "http://test.com"])
+    summary = Readability.summarize_source(html, [url: "http://test.com"])
 
     assert summary.article_html =~ ~r/^<div><div class=""><h4>BACKGROUND AND OBJECTIVES: <\/h4><p><abstracttext>Although strict blood pressure/
     assert summary.article_html =~ ~r/different mechanisms yielded potent antihypertensive efficacy with safety and decreased plasma BNP levels.<\/abstracttext><\/p><\/div><\/div>$/
